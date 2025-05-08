@@ -1,7 +1,10 @@
 import { TodoList } from "@/components/todo-list";
+import { headers } from "next/headers";
 
 export default async function HomePage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const host = (await headers()).get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const siteUrl = `${protocol}://${host}`;
   const res = await fetch(`${siteUrl}/api/todo`);
   const initialTodos = await res.json();
 
