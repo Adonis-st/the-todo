@@ -14,8 +14,8 @@ export const TodoList = ({ initialTodos }: { initialTodos: Todo[] }) => {
 
   const handleSubmit = (newTodo: string) => {
     setTodos((prev) => [
-      ...prev,
       { id: uuid(), title: newTodo, completed: false },
+      ...prev,
     ]);
   };
 
