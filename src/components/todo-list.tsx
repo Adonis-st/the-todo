@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { v4 as uuid } from "uuid";
 
 type Todo = {
   id: string;
@@ -12,27 +11,41 @@ type Todo = {
 export const TodoList = ({ initialTodos }: { initialTodos: Todo[] }) => {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
 
-  const handleSubmit = (newTodo: string) => {
-    setTodos((prev) => [
-      { id: uuid(), title: newTodo, completed: false },
-      ...prev,
-    ]);
+  // Submit the new todo to the api
+  const handleSubmit = async (title: string) => {
+    const res = await fetch("/api/todo", {
+      method: "POST",
+      body: JSON.stringify({ title }),
+    });
+    const newTodo = await res.json();
+    setTodos((prev) => [newTodo, ...prev]);
   };
 
-  const handleTodoToggle = (id: string) => {
-    // update and sort the todos by completed state
-    setTodos(
-      todos
-        .map((todo) =>
-          todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        )
-        .sort((a, b) => Number(a.completed) - Number(b.completed))
-    );
+  const handleTodoToggle = async (id: string) => {
+    const todo = todos?.find((todo) => todo.id === id);
+
+    // Update the todo from the api and sort the todos by completed state
+    const res = await fetch("/api/todo", {
+      method: "PATCH",
+      body: JSON.stringify({
+        id,
+        title: todo?.title,
+        completed: !todo?.completed,
+      }),
+    });
+    const updatedTodo = await res.json();
+    // update the todos array with the updated todo and sort the todos by completed state
+    setTodos((prev) => [...prev.filter((todo) => todo.id !== id), updatedTodo]);
   };
 
-  const handleTodoDelete = (id: string) => {
-    // delete the todo
-    setTodos(todos.filter((todo) => todo.id !== id));
+  const handleTodoDelete = async (id: string) => {
+    // Delete the todo from the api and sort the todos by completed state
+    const res = await fetch("/api/todo", {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    });
+    const deletedTodoId = await res.json();
+    setTodos(todos.filter((todo) => todo.id !== deletedTodoId));
   };
 
   return (
@@ -78,7 +91,7 @@ const TodoItem = ({
         </span>
       </label>
       <button
-        className="bg-red-500 text-white px-2 py-1 rounded-md"
+        className="bg-red-500 text-white px-2 py-1 rounded-md "
         onClick={() => handleTodoDelete(todo.id)}
       >
         Delete
@@ -90,7 +103,7 @@ const TodoItem = ({
 const TodoForm = ({
   handleSubmit,
 }: {
-  handleSubmit: (newTodo: string) => void;
+  handleSubmit: (title: string) => void;
 }) => {
   const [title, setTitle] = useState("");
 
